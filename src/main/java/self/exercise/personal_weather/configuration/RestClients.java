@@ -10,7 +10,6 @@ public class RestClients {
     @Bean
     public RestClient openWeatherClient() {
         return RestClient.builder()
-                .baseUrl("")
                 .build();
     }
 
