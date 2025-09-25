@@ -21,7 +21,6 @@ public class OpenWeatherService {
     public OpenWeatherService(RestClient restClient, OpenWeatherConfig openWeatherConfig) {
         this.restClient = restClient;
         this.openWeatherConfig = openWeatherConfig;
-        getGeolocations("Cedar Park", Optional.empty(), Optional.empty());
     }
 
     private URI buildLocationUri(String locationQuery) {
