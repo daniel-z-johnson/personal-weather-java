@@ -1,6 +1,5 @@
 package self.exercise.personal_weather.repository;
 
-import jakarta.annotation.PostConstruct;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import self.exercise.personal_weather.mapper.GeoLocationMapper;
