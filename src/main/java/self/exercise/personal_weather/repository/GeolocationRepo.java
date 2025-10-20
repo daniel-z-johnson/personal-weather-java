@@ -20,6 +20,9 @@ public class GeolocationRepo {
     public GeoLocation insertLocation(String city, String state, String country, String lat, String lon) {
         Long id = jdbcTemplate.queryForObject(LocationSQL.INSERT_LOCATION, Long.class, city, state, country, lat, lon);
         var loc = new GeoLocation();
+        if(id != null) {
+            loc.setId(id);
+        }
         loc.setLat(lat);
         loc.setLon(lon);
         loc.setCountry(country);
