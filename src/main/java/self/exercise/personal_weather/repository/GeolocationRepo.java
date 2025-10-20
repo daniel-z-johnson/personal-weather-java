@@ -17,12 +17,6 @@ public class GeolocationRepo {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    @PostConstruct
-    public void init(){
-        System.out.println("GeolocationRepo init");
-        System.out.println(getLocations());
-    }
-
     public GeoLocation insertLocation(String city, String state, String country, String lat, String lon) {
         Long id = jdbcTemplate.queryForObject(LocationSQL.INSERT_LOCATION, Long.class, city, state, country, lat, lon);
         var loc = new GeoLocation();
