@@ -12,4 +12,5 @@ public class GeoLocation {
     private String state;
     private String lat;
     private String lon;
+    private String city;
 }
