@@ -11,6 +11,7 @@ import java.util.List;
 public class GeolocationRepo {
 
     private final JdbcTemplate jdbcTemplate;
+    private static final GeoLocationMapper geoLocationMapper = new GeoLocationMapper();
 
     public GeolocationRepo(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
@@ -31,6 +32,6 @@ public class GeolocationRepo {
     }
 
     public List<GeoLocation> getLocations() {
-        return jdbcTemplate.query(LocationSQL.ALL_LOCATIONS, new GeoLocationMapper());
+        return jdbcTemplate.query(LocationSQL.ALL_LOCATIONS, geoLocationMapper);
     }
 }
