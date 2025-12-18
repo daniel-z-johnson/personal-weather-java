@@ -35,7 +35,7 @@ services:
     restart: unless-stopped
 
   sonarqube:
-    image: sonarqube:25.9.0.112764-community
+    image: sonarqube:community
     container_name: sonarqube
     depends_on:
       - postgres_sonar
