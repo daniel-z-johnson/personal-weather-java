@@ -5,7 +5,7 @@
 @param List<GeoLocation> locs
 
 @template.main(content = @`
-    <form action="" method="post">
+    <form action="/getCities" method="get">
         <button type="submit">
 
         </button>
