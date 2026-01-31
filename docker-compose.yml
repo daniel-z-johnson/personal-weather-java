@@ -8,7 +8,7 @@ services:
     restart: unless-stopped
 
   postgres:
-    image: postgres:17.6
+    image: postgres:17
     container_name: postgres
     environment:
       POSTGRES_USER: weather
@@ -22,7 +22,7 @@ services:
 
 
   postgres_sonar:
-    image: postgres:17.6
+    image: postgres:17
     container_name: postgres_sonar
     environment:
       POSTGRES_USER: sonar

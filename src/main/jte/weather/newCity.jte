@@ -5,12 +5,11 @@
 @param List<GeoLocation> locs
 
 @template.main(content = @`
-    @for(var loc : locs)
-        <h4>${loc.getCity()}</h4>
-    @endfor
+    <form action="" method="post">
+        <button type="submit">
+
+        </button>
+    </form>
 `,
-        title = title
+title = title
 )
-
-
-

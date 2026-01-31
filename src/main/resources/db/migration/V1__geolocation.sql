@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS locations (
     id BIGSERIAL PRIMARY KEY,
     city TEXT NOT NULL,
-    state TEXT NOT NULL,
-    country TEXT NOT NULL,
+    state TEXT NOT NULL DEFAULT '',
+    country TEXT NOT NULL DEFAULT '',
     latitude TEXT  NOT NULL DEFAULT '0.0',
     longitude TEXT NOT NULL DEFAULT '0.0'
 );
