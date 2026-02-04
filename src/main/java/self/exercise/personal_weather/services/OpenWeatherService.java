@@ -27,6 +27,7 @@ public class OpenWeatherService {
         return UriComponentsBuilder.fromUriString(openWeatherConfig.getLocationUrl())
                 .queryParam("appid", openWeatherConfig.getApiKey())
                 .queryParam("q", locationQuery)
+                .queryParam("limit", 5)
                 .build()
                 .toUri();
     }
