@@ -19,8 +19,6 @@
 <main>
     ${content}
 </main>
-<footer>
-    <p>&copy; 2025 Your Site Name. All rights reserved.</p>
-</footer>
+@template.common.foot()
 </body>
 </html>
