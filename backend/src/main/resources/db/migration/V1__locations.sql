@@ -1,8 +1,8 @@
 CREATE TABLE locations (
                        id SERIAL PRIMARY KEY,
-                       City TEXT NOT NULL,
-                       State TEXT NOT NULL DEFAULT '',
-                       Country TEXT NOT NULL DEFAULT '',
-                       Latitude REAL NOT NULL DEFAULT 0.0,
-                       Longitude REAL NOT NULL DEFAULT 0.0
+                       city TEXT NOT NULL,
+                       state TEXT NOT NULL DEFAULT '',
+                       country TEXT NOT NULL DEFAULT '',
+                       latitude REAL NOT NULL DEFAULT 0.0,
+                       longitude REAL NOT NULL DEFAULT 0.0
 );
