@@ -1,8 +1,9 @@
 CREATE TABLE locations (
-                       id SERIAL PRIMARY KEY,
-                       City TEXT NOT NULL,
-                       State TEXT NOT NULL DEFAULT '',
-                       Country TEXT NOT NULL DEFAULT '',
-                       Latitude REAL NOT NULL DEFAULT 0.0,
-                       Longitude REAL NOT NULL DEFAULT 0.0
+    id        BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    city      TEXT             NOT NULL,
+    state     TEXT             NOT NULL DEFAULT '',
+    country   TEXT             NOT NULL DEFAULT '',
+    latitude  DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    CONSTRAINT locations_lat_lon_unique UNIQUE (latitude, longitude)
 );
