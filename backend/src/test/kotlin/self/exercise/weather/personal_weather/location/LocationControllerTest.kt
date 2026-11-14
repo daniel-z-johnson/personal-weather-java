@@ -7,23 +7,25 @@ import org.mockito.Mockito.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.post
 import org.springframework.web.client.HttpClientErrorException
-import self.exercise.weather.personal_weather.openweather.GeoLocation
-import self.exercise.weather.personal_weather.openweather.OpenWeatherGeocodingClient
 
 @WebMvcTest(LocationController::class)
 class LocationControllerTest @Autowired constructor(private val mockMvc: MockMvc) {
 
 	@MockitoBean
-	lateinit var client: OpenWeatherGeocodingClient
+	lateinit var service: LocationService
+
+	private val selectionId = "3f2a9c1e-0b7d-4c55-9a51-2e8f6d4b1a00:0"
 
 	@Test
-	fun `returns the matches from OpenWeather`() {
-		given(client.findByName("Saint Paul", "MN", "US"))
-			.willReturn(listOf(GeoLocation("Saint Paul", "Minnesota", "US", 44.9497, -93.0931)))
+	fun `search returns the matches with their ids`() {
+		given(service.search("Saint Paul", "MN", "US"))
+			.willReturn(listOf(SearchResult(selectionId, "Saint Paul", "Minnesota", "US", 44.9497, -93.0931)))
 
 		mockMvc.get("/api/locations/search") {
 			param("city", "Saint Paul")
@@ -33,7 +35,7 @@ class LocationControllerTest @Autowired constructor(private val mockMvc: MockMvc
 			status { isOk() }
 			content {
 				json(
-					"""[{"name":"Saint Paul","state":"Minnesota","country":"US","lat":44.9497,"lon":-93.0931}]""",
+					"""[{"id":"$selectionId","name":"Saint Paul","state":"Minnesota","country":"US","lat":44.9497,"lon":-93.0931}]""",
 					strict = true,
 				)
 			}
@@ -41,8 +43,8 @@ class LocationControllerTest @Autowired constructor(private val mockMvc: MockMvc
 	}
 
 	@Test
-	fun `state and country are optional, and blank ones are dropped`() {
-		given(client.findByName("Paris", null, null)).willReturn(emptyList())
+	fun `search state and country are optional, and blank ones are dropped`() {
+		given(service.search("Paris", null, null)).willReturn(emptyList())
 
 		mockMvc.get("/api/locations/search") {
 			param("city", "Paris")
@@ -53,26 +55,82 @@ class LocationControllerTest @Autowired constructor(private val mockMvc: MockMvc
 			content { json("[]", strict = true) }
 		}
 
-		verify(client).findByName("Paris", null, null)
+		verify(service).search("Paris", null, null)
 	}
 
 	@Test
-	fun `missing or blank city is a bad request`() {
+	fun `search with a missing, blank, or too long city is a bad request`() {
 		mockMvc.get("/api/locations/search").andExpect { status { isBadRequest() } }
 		mockMvc.get("/api/locations/search") { param("city", " ") }.andExpect { status { isBadRequest() } }
+		mockMvc.get("/api/locations/search") { param("city", "x".repeat(101)) }.andExpect { status { isBadRequest() } }
 
-		verifyNoInteractions(client)
+		verifyNoInteractions(service)
 	}
 
 	@Test
-	fun `an OpenWeather failure is a bad gateway`() {
-		given(client.findByName("London", null, null))
+	fun `search when OpenWeather fails is a bad gateway`() {
+		given(service.search("London", null, null))
 			.willThrow(HttpClientErrorException(HttpStatus.UNAUTHORIZED))
 
-		mockMvc.get("/api/locations/search?city=London")
+		mockMvc.get("/api/locations/search") { param("city", "London") }
 			.andExpect {
 				status { isEqualTo(502) }
 				jsonPath("$.detail") { value("Location lookup is unavailable right now.") }
 			}
+	}
+
+	@Test
+	fun `selecting a new location is created`() {
+		given(service.select(selectionId))
+			.willReturn(SelectedLocation(Location("Saint Paul", "Minnesota", "US", 44.9497, -93.0931, id = 7), created = true))
+
+		postSelection(selectionId).andExpect {
+			status { isCreated() }
+			content {
+				json(
+					"""{"id":7,"city":"Saint Paul","state":"Minnesota","country":"US","latitude":44.9497,"longitude":-93.0931}""",
+					strict = true,
+				)
+			}
+		}
+	}
+
+	@Test
+	fun `selecting an already saved location is ok and has no state when it has none`() {
+		given(service.select(selectionId))
+			.willReturn(SelectedLocation(Location("Monaco", "", "MC", 43.73, 7.42, id = 3), created = false))
+
+		postSelection(selectionId).andExpect {
+			status { isOk() }
+			jsonPath("$.id") { value(3) }
+			jsonPath("$.state") { value(null) }
+		}
+	}
+
+	@Test
+	fun `selecting an expired or unknown id is not found`() {
+		given(service.select(selectionId)).willThrow(SearchSelectionNotFoundException())
+
+		postSelection(selectionId).andExpect {
+			status { isNotFound() }
+			jsonPath("$.detail") { value("Search result not found or expired. Please search again.") }
+		}
+	}
+
+	@Test
+	fun `selecting with a malformed or missing id is a bad request`() {
+		postSelection("not-an-id").andExpect { status { isBadRequest() } }
+		postSelection("3f2a9c1e-0b7d-4c55-9a51-2e8f6d4b1a00").andExpect { status { isBadRequest() } }
+		mockMvc.post("/api/locations") {
+			contentType = MediaType.APPLICATION_JSON
+			content = "{}"
+		}.andExpect { status { isBadRequest() } }
+
+		verifyNoInteractions(service)
+	}
+
+	private fun postSelection(id: String) = mockMvc.post("/api/locations") {
+		contentType = MediaType.APPLICATION_JSON
+		content = """{"id":"$id"}"""
 	}
 }
