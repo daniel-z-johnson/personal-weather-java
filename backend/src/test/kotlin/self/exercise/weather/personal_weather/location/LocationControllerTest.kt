@@ -1,13 +1,17 @@
 package self.exercise.weather.personal_weather.location
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.BDDMockito.given
 import org.mockito.BDDMockito.willThrow
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.system.CapturedOutput
+import org.springframework.boot.test.system.OutputCaptureExtension
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.data.redis.RedisConnectionFailureException
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.context.bean.override.mockito.MockitoBean
@@ -16,6 +20,9 @@ import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import org.springframework.web.client.HttpClientErrorException
+import org.springframework.web.client.ResourceAccessException
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 @WebMvcTest(LocationController::class)
 class LocationControllerTest @Autowired constructor(private val mockMvc: MockMvc) {
@@ -80,6 +87,35 @@ class LocationControllerTest @Autowired constructor(private val mockMvc: MockMvc
 				status { isEqualTo(502) }
 				jsonPath("$.detail") { value("Location lookup is unavailable right now.") }
 			}
+	}
+
+	@Test
+	@ExtendWith(OutputCaptureExtension::class)
+	fun `an OpenWeather error response is logged by status, without its body`(output: CapturedOutput) {
+		val body = """{"cod":401,"message":"Invalid API key secret-key"}""".toByteArray()
+		given(service.search("London", null, null))
+			.willThrow(HttpClientErrorException.create(HttpStatus.UNAUTHORIZED, "Unauthorized", HttpHeaders(), body, null))
+
+		mockMvc.get("/api/locations/search") { param("city", "London") }
+			.andExpect { status { isEqualTo(502) } }
+
+		assertTrue(output.contains("OpenWeather call failed with status 401"), output.toString())
+		assertFalse(output.contains("secret-key"), output.toString())
+	}
+
+	@Test
+	@ExtendWith(OutputCaptureExtension::class)
+	fun `an OpenWeather timeout is a bad gateway and is logged with its message`(output: CapturedOutput) {
+		val message = """I/O error on GET request for "https://api.openweathermap.org/geo/1.0/direct": Read timed out"""
+		given(service.search("London", null, null)).willThrow(ResourceAccessException(message))
+
+		mockMvc.get("/api/locations/search") { param("city", "London") }
+			.andExpect {
+				status { isEqualTo(502) }
+				jsonPath("$.detail") { value("Location lookup is unavailable right now.") }
+			}
+
+		assertTrue(output.contains("OpenWeather call failed: $message"), output.toString())
 	}
 
 	@Test
