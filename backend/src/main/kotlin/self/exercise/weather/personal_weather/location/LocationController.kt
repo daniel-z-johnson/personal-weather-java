@@ -4,18 +4,17 @@ import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
-import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
-import org.springframework.http.ProblemDetail
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.ExceptionHandler
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.client.RestClientException
 
 data class SelectLocationRequest(
 	@NotBlank
@@ -45,7 +44,14 @@ data class LocationResponse(
 @RequestMapping("/api/locations")
 class LocationController(private val locationService: LocationService) {
 
-	private val log = LoggerFactory.getLogger(javaClass)
+	/** Every saved location, oldest first. */
+	@GetMapping
+	fun list(): List<LocationResponse> = locationService.list().map(::LocationResponse)
+
+	/** Removes a saved location: 204 when removed, 404 if there was none with that id. */
+	@DeleteMapping("/{id}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	fun delete(@PathVariable id: Long) = locationService.delete(id)
 
 	/** Finds places matching the name using OpenWeather. Blank state or country is treated as absent. */
 	@GetMapping("/search")
@@ -66,17 +72,6 @@ class LocationController(private val locationService: LocationService) {
 		val selected = locationService.select(request.id)
 		val status = if (selected.created) HttpStatus.CREATED else HttpStatus.OK
 		return ResponseEntity.status(status).body(LocationResponse(selected.location))
-	}
-
-	@ExceptionHandler(SearchSelectionNotFoundException::class)
-	fun selectionNotFound(): ProblemDetail =
-		ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "Search result not found or expired. Please search again.")
-
-	/** OpenWeather failed or was unreachable: that's an upstream problem, not ours, so 502 rather than 500. */
-	@ExceptionHandler(RestClientException::class)
-	fun openWeatherFailed(e: RestClientException): ProblemDetail {
-		log.warn("OpenWeather geocoding call failed: {}", e.message)
-		return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY, "Location lookup is unavailable right now.")
 	}
 
 	companion object {

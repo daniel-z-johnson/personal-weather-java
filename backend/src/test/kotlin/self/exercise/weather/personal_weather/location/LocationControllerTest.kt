@@ -2,14 +2,17 @@ package self.exercise.weather.personal_weather.location
 
 import org.junit.jupiter.api.Test
 import org.mockito.BDDMockito.given
+import org.mockito.BDDMockito.willThrow
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
+import org.springframework.data.redis.RedisConnectionFailureException
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import org.springframework.web.client.HttpClientErrorException
@@ -35,7 +38,7 @@ class LocationControllerTest @Autowired constructor(private val mockMvc: MockMvc
 			status { isOk() }
 			content {
 				json(
-					"""[{"id":"$selectionId","name":"Saint Paul","state":"Minnesota","country":"US","lat":44.9497,"lon":-93.0931}]""",
+					"""[{"id":"$selectionId","city":"Saint Paul","state":"Minnesota","country":"US","latitude":44.9497,"longitude":-93.0931}]""",
 					strict = true,
 				)
 			}
@@ -76,6 +79,18 @@ class LocationControllerTest @Autowired constructor(private val mockMvc: MockMvc
 			.andExpect {
 				status { isEqualTo(502) }
 				jsonPath("$.detail") { value("Location lookup is unavailable right now.") }
+			}
+	}
+
+	@Test
+	fun `search when redis is down is service unavailable`() {
+		given(service.search("London", null, null))
+			.willThrow(RedisConnectionFailureException("Unable to connect to Redis"))
+
+		mockMvc.get("/api/locations/search") { param("city", "London") }
+			.andExpect {
+				status { isEqualTo(503) }
+				jsonPath("$.detail") { value("Service is temporarily unavailable. Please try again.") }
 			}
 	}
 
@@ -125,6 +140,66 @@ class LocationControllerTest @Autowired constructor(private val mockMvc: MockMvc
 			contentType = MediaType.APPLICATION_JSON
 			content = "{}"
 		}.andExpect { status { isBadRequest() } }
+
+		verifyNoInteractions(service)
+	}
+
+	@Test
+	fun `list returns the saved locations`() {
+		given(service.list()).willReturn(
+			listOf(
+				Location("Saint Paul", "Minnesota", "US", 44.9497, -93.0931, id = 7),
+				Location("Monaco", "", "MC", 43.73, 7.42, id = 9),
+			),
+		)
+
+		mockMvc.get("/api/locations").andExpect {
+			status { isOk() }
+			content {
+				json(
+					"""[
+						{"id":7,"city":"Saint Paul","state":"Minnesota","country":"US","latitude":44.9497,"longitude":-93.0931},
+						{"id":9,"city":"Monaco","state":null,"country":"MC","latitude":43.73,"longitude":7.42}
+					]""",
+					strict = true,
+				)
+			}
+		}
+	}
+
+	@Test
+	fun `list with nothing saved is an empty array`() {
+		given(service.list()).willReturn(emptyList())
+
+		mockMvc.get("/api/locations").andExpect {
+			status { isOk() }
+			content { json("[]", strict = true) }
+		}
+	}
+
+	@Test
+	fun `deleting a saved location is no content`() {
+		mockMvc.delete("/api/locations/7").andExpect {
+			status { isNoContent() }
+			content { string("") }
+		}
+
+		verify(service).delete(7)
+	}
+
+	@Test
+	fun `deleting an unknown location is not found`() {
+		willThrow(LocationNotFoundException(7)).given(service).delete(7)
+
+		mockMvc.delete("/api/locations/7").andExpect {
+			status { isNotFound() }
+			jsonPath("$.detail") { value("Location not found.") }
+		}
+	}
+
+	@Test
+	fun `deleting with a non-numeric id is a bad request`() {
+		mockMvc.delete("/api/locations/abc").andExpect { status { isBadRequest() } }
 
 		verifyNoInteractions(service)
 	}

@@ -99,4 +99,27 @@ class LocationServiceIntegrationTest @Autowired constructor(
 		assertFailsWith<SearchSelectionNotFoundException> { service.select("$searchId:0") }
 		assertEquals(0, repository.count())
 	}
+
+	@Test
+	fun `list returns saved locations oldest first`() {
+		given(geocodingClient.findByName("Saint Paul", null, null)).willReturn(listOf(saintPaul, monaco))
+		val results = service.search("Saint Paul", null, null)
+		service.select(results[1].id)
+		service.select(results[0].id)
+
+		assertEquals(listOf("Monaco", "Saint Paul"), service.list().map { it.city })
+	}
+
+	@Test
+	fun `delete removes only that location, and a second delete is not found`() {
+		given(geocodingClient.findByName("Saint Paul", null, null)).willReturn(listOf(saintPaul, monaco))
+		val results = service.search("Saint Paul", null, null)
+		val kept = service.select(results[0].id).location
+		val removed = service.select(results[1].id).location
+
+		service.delete(checkNotNull(removed.id))
+
+		assertEquals(listOf(kept.id), service.list().map { it.id })
+		assertFailsWith<LocationNotFoundException> { service.delete(checkNotNull(removed.id)) }
+	}
 }

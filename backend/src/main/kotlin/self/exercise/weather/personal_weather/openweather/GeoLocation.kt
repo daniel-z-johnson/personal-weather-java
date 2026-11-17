@@ -1,8 +1,13 @@
 package self.exercise.weather.personal_weather.openweather
 
-/** A match from OpenWeather's geocoding API. Not every place has a [state]. */
+import com.fasterxml.jackson.annotation.JsonAlias
+
+/**
+ * A match from OpenWeather's geocoding API. Not every place has a [state].
+ * OpenWeather calls the city `name`; the alias reads that, while our own stored copies use `city`.
+ */
 data class GeoLocation(
-	val name: String,
+	@JsonAlias("name") val city: String,
 	val state: String? = null,
 	val country: String,
 	val lat: Double,

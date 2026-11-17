@@ -1,6 +1,7 @@
 package self.exercise.weather.personal_weather.location
 
 import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import self.exercise.weather.personal_weather.openweather.OpenWeatherGeocodingClient
 import java.util.UUID
@@ -8,16 +9,18 @@ import java.util.UUID
 /** A search match the user can pick by [id]. */
 data class SearchResult(
 	val id: String,
-	val name: String,
+	val city: String,
 	val state: String?,
 	val country: String,
-	val lat: Double,
-	val lon: Double,
+	val latitude: Double,
+	val longitude: Double,
 )
 
 data class SelectedLocation(val location: Location, val created: Boolean)
 
 class SearchSelectionNotFoundException : RuntimeException("Search result not found or expired")
+
+class LocationNotFoundException(id: Long) : RuntimeException("Location $id not found")
 
 @Service
 class LocationService(
@@ -32,7 +35,7 @@ class LocationService(
 
 		val searchId = searchStore.save(matches)
 		return matches.mapIndexed { index, match ->
-			SearchResult("$searchId:$index", match.name, match.state, match.country, match.lat, match.lon)
+			SearchResult("$searchId:$index", match.city, match.state, match.country, match.lat, match.lon)
 		}
 	}
 
@@ -48,7 +51,7 @@ class LocationService(
 
 		repository.findByLatitudeAndLongitude(match.lat, match.lon)?.let { return SelectedLocation(it, created = false) }
 
-		val location = Location(match.name, match.state.orEmpty(), match.country, match.lat, match.lon)
+		val location = Location(match.city, match.state.orEmpty(), match.country, match.lat, match.lon)
 		return try {
 			SelectedLocation(repository.save(location), created = true)
 		} catch (e: DataIntegrityViolationException) {
@@ -56,6 +59,15 @@ class LocationService(
 			val existing = repository.findByLatitudeAndLongitude(match.lat, match.lon) ?: throw e
 			SelectedLocation(existing, created = false)
 		}
+	}
+
+	/** Every saved location, oldest first. */
+	fun list(): List<Location> = repository.findAll(Sort.by("id"))
+
+	/** @throws LocationNotFoundException if there is no saved location with [id] */
+	fun delete(id: Long) {
+		if (!repository.existsById(id)) throw LocationNotFoundException(id)
+		repository.deleteById(id)
 	}
 
 	companion object {
