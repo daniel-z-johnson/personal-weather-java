@@ -50,13 +50,13 @@ services:
         #- sonarqube_extensions:/opt/sonarqube/extensions
     restart: unless-stopped
   
-  jenkins:
-    image: jenkins/jenkins:lts
-    container_name: jenkins
-    ports:
-      - "7777:8080"
-      - "50000:50000"
-    restart: unless-stopped
+#  jenkins:
+#    image: jenkins/jenkins:lts
+#    container_name: jenkins
+#    ports:
+#      - "7777:8080"
+#      - "50000:50000"
+#    restart: unless-stopped
       # gitlab:
       #image: gitlab/gitlab-ce:latest
       # restart: always
