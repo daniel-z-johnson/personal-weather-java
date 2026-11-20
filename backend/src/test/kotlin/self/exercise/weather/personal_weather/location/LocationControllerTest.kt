@@ -85,7 +85,7 @@ class LocationControllerTest @Autowired constructor(private val mockMvc: MockMvc
 		mockMvc.get("/api/locations/search") { param("city", "London") }
 			.andExpect {
 				status { isEqualTo(502) }
-				jsonPath("$.detail") { value("Location lookup is unavailable right now.") }
+				jsonPath("$.detail") { value("The weather provider is unavailable right now. Please try again later.") }
 			}
 	}
 
@@ -112,7 +112,7 @@ class LocationControllerTest @Autowired constructor(private val mockMvc: MockMvc
 		mockMvc.get("/api/locations/search") { param("city", "London") }
 			.andExpect {
 				status { isEqualTo(502) }
-				jsonPath("$.detail") { value("Location lookup is unavailable right now.") }
+				jsonPath("$.detail") { value("The weather provider is unavailable right now. Please try again later.") }
 			}
 
 		assertTrue(output.contains("OpenWeather call failed: $message"), output.toString())
