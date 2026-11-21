@@ -34,7 +34,7 @@ class ApiExceptionHandler {
 		} else {
 			log.warn("OpenWeather call failed: {}", e.message)
 		}
-		return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY, "Location lookup is unavailable right now.")
+		return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY, "The weather provider is unavailable right now. Please try again later.")
 	}
 
 	/** Redis is down: nothing is wrong with the request, and retrying later will work. */
