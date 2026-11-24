@@ -68,6 +68,36 @@ class OpenWeatherGeocodingClientTest @Autowired constructor(
 	}
 
 	@Test
+	fun `a state with no country searches in the US`() {
+		server.expect(requestTo("https://geo.test/geo/1.0/direct?q=Saint%20Paul%2CMN%2CUS&limit=5&appid=secret-key"))
+			.andRespond(withSuccess("[]", MediaType.APPLICATION_JSON))
+
+		client.findByName("Saint Paul", state = "MN")
+
+		server.verify()
+	}
+
+	@Test
+	fun `a given country is kept alongside a state`() {
+		server.expect(requestTo("https://geo.test/geo/1.0/direct?q=Springfield%2CON%2CCA&limit=5&appid=secret-key"))
+			.andRespond(withSuccess("[]", MediaType.APPLICATION_JSON))
+
+		client.findByName("Springfield", state = "ON", country = "CA")
+
+		server.verify()
+	}
+
+	@Test
+	fun `no state and no country leaves the country out`() {
+		server.expect(requestTo("https://geo.test/geo/1.0/direct?q=Paris&limit=5&appid=secret-key"))
+			.andRespond(withSuccess("[]", MediaType.APPLICATION_JSON))
+
+		client.findByName("Paris")
+
+		server.verify()
+	}
+
+	@Test
 	fun `returns an empty list when nothing matches`() {
 		server.expect(requestTo("https://geo.test/geo/1.0/direct?q=Nowhere&limit=5&appid=secret-key"))
 			.andRespond(withSuccess("[]", MediaType.APPLICATION_JSON))

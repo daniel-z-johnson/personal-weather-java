@@ -1,7 +1,6 @@
 package self.exercise.weather.personal_weather.weather
 
 import org.slf4j.LoggerFactory
-import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
@@ -9,13 +8,6 @@ import self.exercise.weather.personal_weather.openweather.CurrentWeather
 import tools.jackson.core.JacksonException
 import tools.jackson.databind.ObjectMapper
 import tools.jackson.module.kotlin.readValue
-import java.time.Duration
-
-@ConfigurationProperties("weather")
-data class WeatherProperties(
-	/** How long a location's current weather is reused before asking OpenWeather again. */
-	val cacheTtl: Duration = Duration.ofMinutes(15),
-)
 
 /**
  * Current weather per saved location, kept in Redis for [WeatherProperties.cacheTtl] so repeated

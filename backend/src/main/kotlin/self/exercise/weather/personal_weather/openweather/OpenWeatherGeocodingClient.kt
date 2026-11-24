@@ -17,8 +17,9 @@ class OpenWeatherGeocodingClient(
 	/**
 	 * Looks up places by name, best match first. Returns an empty list when nothing matches.
 	 *
-	 * @param state state code; OpenWeather only supports this for the US, and needs [country] too
-	 * @param country ISO 3166 country code
+	 * @param state state code; OpenWeather only supports this for the US
+	 * @param country ISO 3166 country code; defaults to `US` when [state] is given, since OpenWeather
+	 *   would otherwise read the state as the country (`Saint Paul,MN` is Mongolia)
 	 * @param limit maximum number of matches; OpenWeather returns at most 5
 	 */
 	fun findByName(
@@ -27,7 +28,8 @@ class OpenWeatherGeocodingClient(
 		country: String? = null,
 		limit: Int = 5,
 	): List<GeoLocation> {
-		val query = listOfNotNull(city, state, country).joinToString(",")
+		val effectiveCountry = country ?: state?.let { DEFAULT_STATE_COUNTRY }
+		val query = listOfNotNull(city, state, effectiveCountry).joinToString(",")
 		return restClient.get()
 			.uri { uri ->
 				uri.path("/geo/1.0/direct")
@@ -39,5 +41,9 @@ class OpenWeatherGeocodingClient(
 			.retrieve()
 			.body<List<GeoLocation>>()
 			.orEmpty()
+	}
+
+	private companion object {
+		const val DEFAULT_STATE_COUNTRY = "US"
 	}
 }

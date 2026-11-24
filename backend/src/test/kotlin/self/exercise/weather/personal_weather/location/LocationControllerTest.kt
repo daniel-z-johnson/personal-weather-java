@@ -105,8 +105,8 @@ class LocationControllerTest @Autowired constructor(private val mockMvc: MockMvc
 
 	@Test
 	@ExtendWith(OutputCaptureExtension::class)
-	fun `an OpenWeather timeout is a bad gateway and is logged with its message`(output: CapturedOutput) {
-		val message = """I/O error on GET request for "https://api.openweathermap.org/geo/1.0/direct": Read timed out"""
+	fun `an OpenWeather timeout is a bad gateway and is logged with its message, without the api key`(output: CapturedOutput) {
+		val message = """I/O error on GET request for "https://api.openweathermap.org/geo/1.0/direct?q=London&limit=5&appid=secret-key": Read timed out"""
 		given(service.search("London", null, null)).willThrow(ResourceAccessException(message))
 
 		mockMvc.get("/api/locations/search") { param("city", "London") }
@@ -115,7 +115,9 @@ class LocationControllerTest @Autowired constructor(private val mockMvc: MockMvc
 				jsonPath("$.detail") { value("The weather provider is unavailable right now. Please try again later.") }
 			}
 
-		assertTrue(output.contains("OpenWeather call failed: $message"), output.toString())
+		val redacted = message.replace("appid=secret-key", "appid=***")
+		assertTrue(output.contains("OpenWeather call failed: $redacted"), output.toString())
+		assertFalse(output.contains("secret-key"), output.toString())
 	}
 
 	@Test
