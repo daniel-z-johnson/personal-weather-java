@@ -3,7 +3,8 @@
 *As Calvin Coolidge might have written it. For more words, see
 [README.md](README.md).*
 
-It reports the weather. Kotlin and Spring Boot. In `backend/`.
+It reports the weather. Kotlin and Spring Boot, in `backend/`. React, in
+`frontend/`.
 
 ## Requirements
 
@@ -20,6 +21,16 @@ SPRING_PROFILES_ACTIVE=local ./gradlew bootRun
 ```
 
 Set the profile. Without it, the app fails.
+
+Then the frontend:
+
+```sh
+cd frontend
+npm install
+npm run dev
+```
+
+Open http://localhost:5173. Search. Save. Read the temperature.
 
 ## Tests
 

@@ -6,7 +6,9 @@ see [README.md](README.md).*
 Sing to me, Muse, of the app of many turnings, which reads the moods of the
 heavens so that no sailor need again be driven ten years across the wine-dark
 sea. Its backend was forged in Kotlin and Spring Boot, as Hephaestus forges
-bronze, and it lies in the hall called `backend/`.
+bronze, and it lies in the hall called `backend/`. Its face, which mortals look
+upon, was woven in React and TypeScript and Tailwind, as Athena weaves, and it
+lies in the hall called `frontend/`.
 
 ## Of what the hero must carry
 
@@ -45,6 +47,24 @@ the builder who sails with no profile at all will never leave the harbor. And
 Spring will not tell him so plainly. Like the Sirens on their meadow, it sings
 only `Failed to configure a DataSource`. The wise builder hears this song, sets
 a profile, and sails again.
+
+## Of the face the mortals see
+
+While the ship is on the water, the builder goes into `frontend/` and calls up
+the face of the app:
+
+```sh
+cd frontend
+npm install
+npm run dev
+```
+
+Then let the builder open http://localhost:5173, as one opens the doors of a
+hall to guests. There the builder may search out cities by name, keep the ones
+that are dear, and see the warmth or the cold of each, in Fahrenheit and in
+Celsius. All that the face asks of `/api`, Vite carries to the backend on
+`localhost:8080`, as Hermes carries the words of the gods. So the two halls
+speak as one house, and no quarrel of CORS arises between them.
 
 ## Of the trials
 
