@@ -10,6 +10,7 @@ import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestClientResponseException
 import self.exercise.weather.personal_weather.location.LocationNotFoundException
 import self.exercise.weather.personal_weather.location.SearchSelectionNotFoundException
+import self.exercise.weather.personal_weather.openweather.redactApiKey
 
 /** Turns failures from any controller into problem-detail responses. */
 @RestControllerAdvice
@@ -32,7 +33,7 @@ class ApiExceptionHandler {
 			// Status only: the message of an error response includes the upstream body, which we don't control.
 			log.warn("OpenWeather call failed with status {}", e.statusCode.value())
 		} else {
-			log.warn("OpenWeather call failed: {}", e.message)
+			log.warn("OpenWeather call failed: {}", redactApiKey(e.message))
 		}
 		return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY, "The weather provider is unavailable right now. Please try again later.")
 	}

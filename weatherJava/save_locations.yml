@@ -1,0 +1,22 @@
+info:
+  name: save_locations
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: localhost:8080/api/locations
+  body:
+    type: json
+    data: |-
+      {
+        "id":"5e05da4e-4674-4362-a995-e3d378052054:0"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
