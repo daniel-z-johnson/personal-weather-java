@@ -10,7 +10,7 @@ http:
     type: json
     data: |-
       {
-        "id":"5e05da4e-4674-4362-a995-e3d378052054:0"
+        "id":"4306b0c4-0340-487b-918e-7c9b8726279a:0"
       }
   auth: inherit
 

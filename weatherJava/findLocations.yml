@@ -5,10 +5,10 @@ info:
 
 http:
   method: GET
-  url: localhost:8080/api/locations/search?city=temple
+  url: localhost:8080/api/locations/search?city=Bentonville
   params:
     - name: city
-      value: temple
+      value: Bentonville
       type: query
   auth: inherit
 
